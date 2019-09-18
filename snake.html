@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<body>
+
+<style>
+.cell{
+ width: 10px;
+ height: 10px
+}
+.body{
+ background-color: black
+}
+.head{
+ background-color: blue
+}
+.apple{
+ background-color: red
+}
+#dead{
+ color: red
+}
+#grid{
+ border: 1px solid black
+}
+</style>
+
+<h1 id="dead" style="display:none">You are dead</h1>
+<table id="grid"></table>
+<table id="directions">
+  <tr>
+    <td></td>
+    <td><button onclick="changeDirection('up')">^^</button></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td><button onclick="changeDirection('left')">{--</button></td>
+    <td><button onclick="changeDirection('down')">vv</button></td>
+    <td><button onclick="changeDirection('right')">--}</button></td>
+  </tr>
+</table>
+<span>Score: <span id="score">0</span></span>
+
+<script>
+var grid = [];
+var width = 10;
+var height = 10;
+var snake = [[0, 0]];
+var direction = "down";
+var gameSpeed = 1000;
+var dead = false;
+var score = 0;
+
+for (let i = 0; i < height; i++){
+  let rowDOM = document.createElement("tr");
+  let row = [];
+  for (let j = 0; j < width; j++){
+    row.push(0);
+    let cell = document.createElement("td");
+    cell.setAttribute("id", "x" + j + "y" + i);
+    cell.setAttribute("class", "cell");
+    rowDOM.appendChild(cell)
+  }
+  grid.push(row);
+  document.getElementById("grid").appendChild(rowDOM)
+}
+
+document.getElementById("x" + snake[0][0] + "y" + snake[0][1]).setAttribute("class", "cell head");
+
+var placeApple = function(){
+  let x = Math.floor(Math.random() * width);
+  let y = Math.floor(Math.random() * height);
+  if (grid[y][x] == 0){
+    grid[y][x] = 3;
+    document.getElementById("x" + x + "y" + y).setAttribute("class", "apple")
+  } else { placeApple() }
+}
+
+placeApple()
+
+var timer = function(){
+  window.setTimeout(function(){
+    moveSnake();
+    if (!dead){ timer() } else {
+      document.getElementById("dead").setAttribute("style", "display:block")
+    }
+  },gameSpeed)
+}
+
+var moveSnake = function(){
+  let x = snake[0][0];
+  let y = snake[0][1];
+  if (direction == "down"){
+    y++
+  } else if (direction == "right"){
+    x++
+  } else if (direction == "up"){
+    y--
+  } else if (direction == "left"){
+    x--
+  }
+  if (x < 0 || y < 0 || x >= width || y >= height){
+    dead = true
+  } else if (grid[y][x] == 1){
+    dead = true
+  } else if (grid[y][x] == 3) {
+    placeApple();
+    snake.unshift([x, y]);
+    if (gameSpeed > 250){ gameSpeed -= 50 }
+    score += (1000-gameSpeed);
+    document.getElementById("score").innerHTML = score;
+    renderSnake()
+  } else {
+    snake.unshift([x, y]);
+    let oldTail = snake[snake.length - 1];
+    grid[oldTail[1]][oldTail[0]] = 0;
+    document.getElementById("x" + oldTail[0] + "y" + oldTail[1]).setAttribute("class", "cell");
+    snake.pop();
+    renderSnake();
+  }
+}
+
+var renderSnake = function(){
+  snake.forEach(function(piece, i){
+    let x = piece[0];
+    let y = piece[1];
+    let cell = document.getElementById("x" + x + "y" + y);
+    if (i == 0){ cell.setAttribute("class", "cell head"); grid[y][x] = 2 }
+    else { cell.setAttribute("class", "cell body"); grid[y][x] = 1 }
+  })
+}
+
+var changeDirection = function(input){
+  direction = input
+}
+
+timer()
+
+</script>
+
+</body>
